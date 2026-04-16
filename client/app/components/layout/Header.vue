@@ -1,11 +1,13 @@
 <script setup lang="ts">
 const date = ref("March 9th, 2026");
 const route = useRoute();
-const props = defineProps(["title"]);
+const props = defineProps<{
+  title: string;
+}>();
 </script>
 <template>
   <header
-    class="fixed left-0 md:left-64 top-0 right-0 h-14 px-4 flex items-center justify-between bg-black/55 backdrop-blur-md border-b"
+    class="fixed left-0 md:left-64 top-0 right-0 h-14 px-4 flex items-center justify-between bg-background/55 backdrop-blur-md border-b"
   >
     <div class="flex items-center gap-1">
       <h4 class="font-bold">{{ props.title }}</h4>
