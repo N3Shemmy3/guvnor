@@ -143,7 +143,7 @@ const apply = (serviceName: string) => {
         </p>
       </div>
 
-      <ul class="w-full grid gap-4 md:gap-8 list-none pt-12">
+      <ul class="w-full grid gap-4 md:grid-cols-2 md:gap-8 list-none pt-12">
         <li
           v-for="incentive in incentives"
           :key="incentive.name"
@@ -163,7 +163,27 @@ const apply = (serviceName: string) => {
         </li>
       </ul>
     </section>
-    <section id="cta"></section>
+    <section
+      id="cta"
+      class="w-full aspect-video bg-foreground text-background flex flex-col text-center items-center justify-center"
+    >
+      <h2
+        class="w-fit scroll-m-20 text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage md:text-5xl lg:text-6xl"
+      >
+        Ready to Get Started?
+      </h2>
+      <p
+        class="leading-7 not-first:mt-6 md:max-w-2xl mx-auto text-balance text-lg text-scard"
+      >
+        Sign up today and experience the convenience of managing your city
+        services online.
+      </p>
+      <button
+        class="mt-8 bg-background text-foreground text-center hover:bg-background/75 px-4 py-2 rounded-md cursor-pointer transition-all duration-200"
+      >
+        Sign Up Now
+      </button>
+    </section>
   </div>
 </template>
 
