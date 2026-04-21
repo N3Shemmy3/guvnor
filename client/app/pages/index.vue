@@ -49,7 +49,7 @@ const apply = (serviceName: string) => {
   <div class="w-full flex flex-col">
     <section id="hero" class="w-full">
       <div id="hero-text" class="w-full px-6 md:px-8 lg:px-12 py-20">
-        <div class="h-12 md:h-20 lg:h-24 *:select-text" />
+        <div class="h-8 md:h-20 lg:h-24 *:select-text" />
         <h1
           class="w-fit scroll-m-20 text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage md:text-5xl lg:text-6xl"
         >
@@ -165,15 +165,15 @@ const apply = (serviceName: string) => {
     </section>
     <section
       id="cta"
-      class="w-full aspect-video bg-foreground text-background flex flex-col text-center items-center justify-center"
+      class="w-full aspect-video bg-foreground text-background flex flex-col text-center items-center md:justify-center"
     >
       <h2
-        class="w-fit scroll-m-20 text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage md:text-5xl lg:text-6xl"
+        class="w-fit scroll-m-20 text-2xl md:text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage lg:text-5xl xl:text-6xl"
       >
         Ready to Get Started?
       </h2>
       <p
-        class="leading-7 not-first:mt-6 md:max-w-2xl mx-auto text-balance text-lg text-scard"
+        class="leading-7 not-first:mt-6 md:max-w-2xl mx-auto text-balance text-base md:text-lg text-scard"
       >
         Sign up today and experience the convenience of managing your city
         services online.

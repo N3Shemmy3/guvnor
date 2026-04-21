@@ -14,7 +14,7 @@ const links = [
 <template>
   <div class="min-h-dvh w-dvw flex flex-col">
     <header
-      class="fixed z-50 h-14 left-0 top-0 right-0 px-6 md:px-8 lg:px-12 bg-background flex items-center justify-between"
+      class="sticky z-50 h-14 left-0 top-0 right-0 px-6 md:px-8 lg:px-12 bg-background flex items-center justify-between"
     >
       <div class="flex">
         <svg
