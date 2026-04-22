@@ -1,37 +1,69 @@
-<script setup lang="ts">
-import { ref } from "vue";
+<script setup>
+import { ref, watch } from "vue";
 import { useForm } from "vee-validate";
-import { z } from "zod";
-import { toTypedSchema } from "@vee-validate/zod";
 
 definePageMeta({
   layout: false,
 });
 
 const showPassword = ref(false);
+const passwordValue = ref("");
+const isMinLength = ref(false);
+const hasUppercase = ref(false);
+const hasNumber = ref(false);
 
-const validationSchema = toTypedSchema(
-  z.object({
-    email: z
-      .string()
-      .min(1, "Email is required")
-      .email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(1, "Password is required")
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    remember: z.boolean().default(false),
-  }),
-);
+// Watch the password value and update live validation checks
+watch(passwordValue, (newVal) => {
+  isMinLength.value = newVal.length >= 8;
+  hasUppercase.value = /[A-Z]/.test(newVal);
+  hasNumber.value = /[0-9]/.test(newVal);
+});
 
-const { handleSubmit, isSubmitting } = useForm({
+const validationSchema = {
+  email: (value) => {
+    if (!value) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+      return "Please enter a valid email address";
+    return true;
+  },
+  password: (value) => {
+    if (!value) return "Password is required";
+    if (value.length < 8 || !/[A-Z]/.test(value) || !/[0-9]/.test(value))
+      return "Invalid Password";
+    return true;
+  },
+  remember: () => true,
+};
+
+const { handleSubmit, isSubmitting, setErrors } = useForm({
   validationSchema,
 });
 
 const onSubmit = handleSubmit(async (values) => {
-  console.log("Form submitted:", values);
+  try {
+    const response = await $fetch("/api/auth/signin.php", {
+      method: "POST",
+      body: {
+        email: values.email,
+        password: values.password,
+        remember: values.remember,
+      },
+    });
+
+    // Assuming the API returns { success: true, message: '...', token: '...' } on success
+    if (response.success) {
+      // Handle successful sign-in, e.g., set token in localStorage or cookie
+      // For example, if using Nuxt auth or custom
+      // await navigateTo('/dashboard');
+      console.log("Sign-in successful:", response);
+    } else {
+      // Handle error, set form errors
+      setErrors({ email: response.message || "Sign-in failed" });
+    }
+  } catch (error) {
+    console.error("Sign-in error:", error);
+    setErrors({ email: "An error occurred during sign-in" });
+  }
 });
 
 const togglePasswordVisibility = () => {
@@ -49,7 +81,7 @@ const togglePasswordVisibility = () => {
       />
     </div>
     <div class="w-full flex flex-col items-center px-6 md:px-8 lg:px-12 py-20">
-      <img name="/svg/logo.svg" size="150" />
+      <img src="/svg/logo.svg" width="150" height="150" />
       <h1 class="text-start text-3xl font-bold mb-4">Sign In</h1>
 
       <form class="w-full space-y-4" @submit="onSubmit">
@@ -79,11 +111,12 @@ const togglePasswordVisibility = () => {
                   placeholder="Password"
                   :type="showPassword ? 'text' : 'password'"
                   v-bind="componentField"
+                  v-model="passwordValue"
                 />
                 <button
                   type="button"
                   @click="togglePasswordVisibility"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  class="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2"
                 >
                   <Icon
                     :name="showPassword ? 'mdi:eye-off' : 'mdi:eye'"
@@ -92,8 +125,17 @@ const togglePasswordVisibility = () => {
                 </button>
               </div>
             </FormControl>
-            <FormDescription />
-            <FormMessage />
+            <ul class="text-sm space-y-1 mt-2">
+              <li :class="{ 'line-through opacity-50': isMinLength }">
+                At least 8 characters
+              </li>
+              <li :class="{ 'line-through opacity-50': hasUppercase }">
+                At least one uppercase letter
+              </li>
+              <li :class="{ 'line-through opacity-50': hasNumber }">
+                At least one number
+              </li>
+            </ul>
           </FormItem>
         </FormField>
 
