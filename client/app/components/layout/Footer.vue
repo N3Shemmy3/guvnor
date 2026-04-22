@@ -17,12 +17,12 @@ const contactInfo = [
 </script>
 <template>
   <footer
-    class="w-full border-t border-background/10 px-6 py-4 flex-1 justify-between md:px-8 md:py-6 lg:px-12 lg:py-8 bg-foreground text-background"
+    class="w-full h-fit border-t border-background/10 px-6 py-4 flex-1 justify-between md:px-8 md:py-6 lg:px-12 lg:py-8 bg-foreground text-background"
   >
     <div class="w-full md:h-20 lg:h-24 *:select-text" />
     <div class="grid md:grid-cols-4 lg:grid-cols-7 gap-8">
       <div class="w-full col-span-3">
-        <img src="/svg/text-logo.svg" alt="logo" class="h-24" />
+        <img name="/svg/logo.svg" class="h-24 w-fit object-fill" />
         <p
           class="w-fit mt-2 leading-7 text-balance text-base md:text-lg text-background/75"
         >
@@ -65,7 +65,7 @@ const contactInfo = [
       </div>
     </div>
 
-    <div class="w-full h-16 md:h-20 lg:h-24 *:select-text" />
+    <div class="w-full h-16 md:h-20 *:select-text" />
     <div
       class="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-sm text-background/70"
     >

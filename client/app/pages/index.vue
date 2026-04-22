@@ -4,19 +4,19 @@ const services = [
     name: "Land & Planning Services",
     description:
       "Access building permits and occupancy licenses. Track site inspections and receive notifications when your structural plans are approved.",
-    image: "/img/hero-image.webp",
+    image: "/img/services/1.webp",
   },
   {
     name: "Smart Permits & Licensing",
     description:
       "Simplify applications for trading licenses, fire certificates, and health permits. Apply and pay online in minutes.",
-    image: "/img/hero-image.webp",
+    image: "/img/services/2.webp",
   },
   {
     name: "Community Certificates",
     description:
       "Register vital events and community groups securely. Process marriage notices, burial permits, and club registrations with accuracy.",
-    image: "/img/hero-image.webp",
+    image: "/img/services/3.webp",
   },
 ];
 
@@ -25,19 +25,16 @@ const incentives = [
     name: "Time Savings",
     description:
       "Skip the queues and manage your permits, business registrations, and community certificates from the comfort of your home or office.",
-    image: "/img/hero-image.webp",
   },
   {
     name: "Convenience",
     description:
       "Access building permits and occupancy licenses. Track site inspections and receive notifications when your structural plans are approved.",
-    image: "/img/hero-image.webp",
   },
   {
     name: "Transparency",
     description:
       "Simplify applications for trading licenses, fire certificates, and health permits. Apply and pay online in minutes.",
-    image: "/img/hero-image.webp",
   },
 ];
 
@@ -49,11 +46,11 @@ const apply = (serviceName: string) => {
   <div class="w-full flex flex-col">
     <section id="hero" class="w-full">
       <div id="hero-text" class="w-full px-6 md:px-8 lg:px-12 py-20">
-        <div class="h-8 md:h-20 lg:h-24 *:select-text" />
+        <Spacer />
         <h1
           class="w-fit scroll-m-20 text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage md:text-5xl lg:text-6xl"
         >
-          Guv’nor — Chipata City Services at <br />
+          Chipata City Services at <br />
           Your Fingertips.
         </h1>
         <p
@@ -66,8 +63,8 @@ const apply = (serviceName: string) => {
       </div>
       <div id="hero-img" class="w-full">
         <NuxtImg
-          class="w-full max-md:aspect-video object-cover"
-          src="/img/hero-image.webp"
+          class="w-full max-md:aspect-video aspect-16/8 object-cover"
+          src="/img/hero.webp"
           alt="Hero Image"
         />
       </div>
@@ -129,7 +126,7 @@ const apply = (serviceName: string) => {
 
     <section id="incentives">
       <div id="incentives-text" class="w-full px-6 md:px-8 lg:px-12">
-        <div class="h-12 md:h-20 lg:h-24 *:select-text" />
+        <Spacer />
         <h2
           class="w-fit scroll-m-20 text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage md:text-5xl lg:text-6xl"
         >
@@ -147,7 +144,7 @@ const apply = (serviceName: string) => {
         <li
           v-for="incentive in incentives"
           :key="incentive.name"
-          class="flex-1 px-6 py-4 md:px-8 md:py-6 lg:px-12 lg:py-8 hover:bg-secondary/10 rounded-md transition-all duration-200"
+          class="flex-1 px-6 py-4 md:px-8 md:py-6 lg:px-12 lg:py-8 hover:bg-secondary/10 rounded transition-all duration-200"
         >
           <h4
             class="scroll-m-20 text-xl md:text-2xl lg:w-3xl font-semibold font-bricolage tracking-tight"
@@ -165,7 +162,7 @@ const apply = (serviceName: string) => {
     </section>
     <section
       id="cta"
-      class="w-full aspect-video bg-foreground text-background flex flex-col text-center items-center md:justify-center"
+      class="w-full min-h-128 aspect-video bg-foreground text-background flex flex-col text-center items-center justify-center"
     >
       <h2
         class="w-fit scroll-m-20 text-2xl md:text-4xl font-extrabold tracking-tight text-start text-balance font-bricolage lg:text-5xl xl:text-6xl"
@@ -178,11 +175,13 @@ const apply = (serviceName: string) => {
         Sign up today and experience the convenience of managing your city
         services online.
       </p>
-      <button
-        class="mt-8 bg-background text-foreground text-center hover:bg-background/75 px-4 py-2 rounded-md cursor-pointer transition-all duration-200"
-      >
-        Sign Up Now
-      </button>
+      <NuxtLink to="/signin">
+        <button
+          class="mt-8 bg-background text-foreground text-center hover:bg-background/75 px-4 py-2 rounded cursor-pointer transition-all duration-200"
+        >
+          Sign Up Now
+        </button>
+      </NuxtLink>
     </section>
   </div>
 </template>

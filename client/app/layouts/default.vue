@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import Header from "~/components/layout/Header.vue";
 import Main from "~/components/layout/Main.vue";
-import Button from "../components/button/Button.vue";
 import Footer from "~/components/layout/Footer.vue";
 
 const links = [
@@ -14,7 +13,7 @@ const links = [
 <template>
   <div class="min-h-dvh w-dvw flex flex-col">
     <header
-      class="sticky z-50 h-14 left-0 top-0 right-0 px-6 md:px-8 lg:px-12 bg-background flex items-center justify-between"
+      class="sticky z-50 h-14 md:h-16 left-0 top-0 right-0 px-6 md:px-8 lg:px-12 bg-background flex items-center justify-between"
     >
       <div class="flex">
         <svg
@@ -64,7 +63,9 @@ const links = [
             </li>
           </ul>
         </nav>
-        <Button>Sign in</Button>
+        <NuxtLink to="/signin">
+          <Button>Sign in</Button>
+        </NuxtLink>
       </div>
     </header>
     <Main class="pt-14 grow">
