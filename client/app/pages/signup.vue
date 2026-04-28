@@ -1,4 +1,5 @@
 <script setup>
+import axios from "axios";
 import { ref, watch } from "vue";
 import { useForm } from "vee-validate";
 
@@ -53,25 +54,30 @@ const { handleSubmit, isSubmitting, setErrors } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await $fetch(config.public.api + "/auth/signup.php", {
-      method: "POST",
-      credentials: "include",
-      body: {
+    const response = await axios.post(
+      `${config.public.api}/auth/signup.php`,
+      {
         name: values.name,
         email: values.email,
         password: values.password,
       },
-    });
+      {
+        withCredentials: true,
+      },
+    );
 
-    if (response.success) {
+    const { success, message } = response.data;
+
+    if (success) {
+      console.log("Sign-up successful:", message);
       await navigateTo("/signin");
-      console.log("Sign-up successful:", response);
     } else {
-      setErrors({ email: response.message || "Sign-up failed" });
+      setErrors({ email: message || "Sign-up failed" });
     }
   } catch (error) {
+    const serverMessage = error.response?.data?.message;
     console.error("Sign-up error:", error);
-    setErrors({ email: "An error occurred during sign-up" });
+    setErrors({ email: serverMessage || "An error occurred during sign-up" });
   }
 });
 
