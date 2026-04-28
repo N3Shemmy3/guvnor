@@ -1,6 +1,6 @@
 <script setup>
 definePageMeta({
-  layout: "portal",
+  layout: "app",
 });
 </script>
 

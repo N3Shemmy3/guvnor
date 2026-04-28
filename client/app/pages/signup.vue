@@ -23,6 +23,10 @@ watch(passwordValue, (newVal) => {
 });
 
 const validationSchema = {
+  name: (value) => {
+    if (!value) return "Name is required";
+    return true;
+  },
   email: (value) => {
     if (!value) return "Email is required";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
@@ -35,8 +39,8 @@ const validationSchema = {
       return "Invalid Password";
     return true;
   },
-  confirmPassword: (value, values) => {
-    const password = values?.password ?? passwordValue.value;
+  confirmPassword: (value) => {
+    const password = passwordValue.value;
     if (!value) return "Confirm password is required";
     if (value !== password) return "Passwords do not match";
     return true;
@@ -49,12 +53,13 @@ const { handleSubmit, isSubmitting, setErrors } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await $fetch(config.public.api + "index.php", {
+    const response = await $fetch(config.public.api + "/auth/signup.php", {
       method: "POST",
+      credentials: "include",
       body: {
+        name: values.name,
         email: values.email,
         password: values.password,
-        confirmPassword: values.confirmPassword,
       },
     });
 
@@ -93,6 +98,24 @@ const toggleConfirmPasswordVisibility = () => {
       <h1 class="text-start text-3xl font-bold mb-4">Create an Account</h1>
 
       <form class="w-full space-y-4" @submit="onSubmit">
+        <div>
+          <FormField name="name" v-slot="{ componentField }">
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input
+                  class="shadow-none outline-none"
+                  placeholder="Full Name"
+                  type="text"
+                  v-bind="componentField"
+                />
+              </FormControl>
+              <FormDescription />
+              <FormMessage />
+            </FormItem>
+          </FormField>
+        </div>
+
         <FormField name="email" v-slot="{ componentField }">
           <FormItem>
             <FormLabel>Email</FormLabel>
@@ -181,6 +204,14 @@ const toggleConfirmPasswordVisibility = () => {
         <Button type="submit" class="w-full" :disabled="isSubmitting">
           {{ isSubmitting ? "Signing Up..." : "Sign Up" }}
         </Button>
+        <center>
+          <p>Or</p>
+        </center>
+        <NuxtLink to="/signin">
+          <Button class="w-full" variant="outline" :disabled="isSubmitting">
+            Sign in
+          </Button>
+        </NuxtLink>
       </form>
     </div>
   </div>

@@ -41,21 +41,17 @@ const { handleSubmit, isSubmitting, setErrors } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await $fetch(config.public.api + "index.php", {
+    const response = await $fetch(config.public.api + "/auth/signin.php", {
       method: "POST",
       body: {
-        action: "signin",
         email: values.email,
         password: values.password,
         remember: values.remember,
       },
     });
 
-    // Assuming the API returns { success: true, message: '...', token: '...' } on success
     if (response.success) {
-      // Handle successful sign-in, e.g., set token in localStorage or cookie
-      // For example, if using Nuxt auth or custom
-      // await navigateTo('/dashboard');
+      await navigateTo("/dashboard");
       console.log("Sign-in successful:", response);
     } else {
       // Handle error, set form errors

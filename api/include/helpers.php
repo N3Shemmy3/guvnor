@@ -16,7 +16,9 @@ function getJson()
 
 function requireAuth()
 {
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     if (empty($_SESSION['user_id'])) {
         respond(['success' => false, 'message' => 'Authentication required'], 401);
     }

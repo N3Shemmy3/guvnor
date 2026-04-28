@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const route = useRoute();
+const router = useRouter();
 defineProps(["items"]);
 defineEmits(["onClickItem", "onOverlayClick"]);
 </script>
@@ -24,7 +24,7 @@ defineEmits(["onClickItem", "onOverlayClick"]);
           class="w-full px-2 h-10 flex transition-all duration-200 gap-2 items-center rounded cursor-pointer hover:bg-primary hover:text-primary-foreground"
           :class="{
             'bg-primary font-bold text-primary-foreground hover:bg-primary/75':
-              route.path == item.url,
+              router.currentRoute.value.path == item.url,
           }"
         >
           <Icon :name="item.icon" />

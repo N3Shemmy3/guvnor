@@ -8,17 +8,17 @@ const router = useRouter();
 const items = ref([
   {
     title: "Dashboard",
-    url: "/portal",
+    url: "/app/",
     icon: "ic:outline-dashboard",
   },
   {
     title: "Applications",
-    url: "/portal/applications",
+    url: "/app/applications",
     icon: "ic:outline-apps",
   },
   {
     title: "Document vault",
-    url: "/portal/documents",
+    url: "/app/documents",
     icon: "ic:outline-folder",
   },
 ]);

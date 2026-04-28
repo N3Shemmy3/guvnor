@@ -1,6 +1,6 @@
 <?php
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: localhost:3000");
 header("Access-Control-Allow-Methods: GET, DELETE, POST, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
@@ -17,9 +17,9 @@ session_start();
 function getDbConnection()
 {
     $host = 'localhost';
-    $db = 'n3shemmy_guvnor';
-    $user = 'n3shemmy_guvnor';
-    $pass = 'jHTJ2HCvdVQmCfX2C4jA';
+    $db = 'guvnor';
+    $user = 'root';
+    $pass = '';
     $charset = 'utf8mb4';
 
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

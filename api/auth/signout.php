@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/include/config.php';
+require_once __DIR__ . '/../include/config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_POST['action'] ?? $_GET['action'] ?? '';
