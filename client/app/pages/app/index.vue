@@ -56,9 +56,14 @@ const applications = [
 
     <section class="flex flex-col gap-4">
       <div class="flex gap-4 px-4 py-2 items-center justify-between">
-        <Input placeholder="Search name/ID...">
-          <Icon name="m" />
-        </Input>
+        <div class="w-full max-w-md flex items-center gap-2">
+          <InputGroup>
+            <InputGroupInput placeholder="Search..." />
+            <InputGroupAddon>
+              <Icon name="ic:outline-search" />
+            </InputGroupAddon>
+          </InputGroup>
+        </div>
         <Button>New Application</Button>
       </div>
 
@@ -77,7 +82,7 @@ const applications = [
         <!-- Body -->
         <tbody class="divide-y rounded-b">
           <tr
-            class="table-fixed *:px-4 *:py-2 hover:bg-card/75 *:cursor-pointer duration-300 transition-all transform-gpu"
+            class="table-fixed *:px-4 *:py-2 hover:bg-card/75 duration-300 transition-all transform-gpu"
             v-for="app in applications"
             :key="app.id"
           >
@@ -87,10 +92,10 @@ const applications = [
             <td>{{ app.time }}</td>
             <td class="flex items-center justify-between">
               <Button variant="secondary" size="icon">
-                <Icon name="mdi:check-outline" />
+                <Icon name="ic:outline-check" />
               </Button>
               <Button variant="destructive" size="icon">
-                <Icon name="mdi:delete" />
+                <Icon name="ic:outline-delete" />
               </Button>
             </td>
           </tr>
