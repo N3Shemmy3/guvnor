@@ -1,13 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once __DIR__ . '/../include/config.php';
-
-session_start();
-if (empty($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    http_response_code(401);
-    echo json_encode(['error' => 'Admin authentication required']);
-    exit;
-}
+require_once __DIR__ . '/admin-check.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';

@@ -1,28 +1,25 @@
 <?php
-function signinUser($method)
-{
-    if ($method !== 'POST') respond(['error' => 'POST required'], 405);
+require_once __DIR__ . '/include/config.php';
 
-    $data = getJson();
-    if (empty($data['email']) || empty($data['password'])) {
-        respond(['error' => 'Email and password required'], 422);
-    }
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
 
-    $pdo = getDbConnection();
-    $stmt = $pdo->prepare('SELECT id, password_hash, role, status FROM users WHERE email = ?');
-    $stmt->execute([$data['email']]);
-    $user = $stmt->fetch();
 
-    if (!$user || !password_verify($data['password'], $user['password_hash'])) {
-        respond(['error' => 'Invalid credentials'], 401);
-    }
-    if ($user['status'] !== 'active') {
-        respond(['error' => 'Account inactive'], 403);
-    }
+if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
-    session_start();
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['role'] = $user['role'];
-
-    respond(['message' => 'Login successful', 'role' => $user['role']]);
+$data = getJson();
+if (empty($data['email']) || empty($data['password'])) {
+    respond(['success' => false, 'message' => 'Email and password are required'], 422);
 }
+
+$pdo = getDbConnection();
+$stmt = $pdo->prepare('SELECT id, password_hash FROM users WHERE email = ?');
+$stmt->execute([$data['email']]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$user || !password_verify($data['password'], $user['password_hash'])) {
+    respond(['success' => false, 'message' => 'Invalid email or password'], 401);
+}
+
+$token = bin2hex(random_bytes(32));
+respond(['success' => true, 'message' => 'Sign-in successful', 'token' => $token], 200);

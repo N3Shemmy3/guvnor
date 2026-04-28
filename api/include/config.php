@@ -1,43 +1,37 @@
 <?php
 header('Content-Type: application/json');
-$allowed_origin = "http://localhost:3000";
-
-if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] == $allowed_origin) {
-    header("Access-Control-Allow-Origin: " . $allowed_origin);
-}
-
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, DELETE, POST, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
 
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    exit(0);
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
 }
 
+require_once __DIR__ . '/helpers.php';
+
 session_start();
-define('DB_HOST', '127.0.0.1');
-define('DB_NAME', 'guvnor');
-define('DB_USER', 'root');
-define('DB_PASS', '');
 
 function getDbConnection()
 {
-    $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
+    $host = 'localhost';
+    $db = 'n3shemmy_guvnor';
+    $user = 'n3shemmy_guvnor';
+    $pass = 'jHTJ2HCvdVQmCfX2C4jA';
+    $charset = 'utf8mb4';
+
+    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ];
+
     try {
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        return $pdo;
+        return new PDO($dsn, $user, $pass, $options);
     } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Database connection failed']);
-        exit;
+        respond(['success' => false, 'message' => 'Database connection failed'], 500);
     }
-}
-
-$conn = getDbConnection();
-
-if ($conn->connect_error) {
-    die(json_encode(['error' => 'Database connection failed: ' . $conn->connect_error]));
 }

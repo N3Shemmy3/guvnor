@@ -5,7 +5,7 @@ import { useForm } from "vee-validate";
 definePageMeta({
   layout: false,
 });
-
+const config = useRuntimeConfig();
 const showPassword = ref(false);
 const passwordValue = ref("");
 const isMinLength = ref(false);
@@ -41,9 +41,10 @@ const { handleSubmit, isSubmitting, setErrors } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await $fetch("/api/auth/signin.php", {
+    const response = await $fetch(config.public.api + "index.php", {
       method: "POST",
       body: {
+        action: "signin",
         email: values.email,
         password: values.password,
         remember: values.remember,
@@ -80,11 +81,13 @@ const togglePasswordVisibility = () => {
         class="w-full h-full object-cover"
       />
     </div>
-    <div class="w-full flex flex-col items-center px-6 md:px-8 lg:px-12 py-20">
-      <img src="/svg/logo.svg" width="150" height="150" />
+    <div
+      class="w-full flex flex-col px-6 md:px-8 lg:px-12 py-20 overflow-scroll"
+    >
+      <img src="/svg/logo.svg" width="150" height="150" class="mb-4" />
       <h1 class="text-start text-3xl font-bold mb-4">Sign In</h1>
 
-      <form class="w-full space-y-4" @submit="onSubmit">
+      <form class="w-full space-y-4" @submit.prevent="onSubmit">
         <FormField name="email" v-slot="{ componentField }">
           <FormItem>
             <FormLabel>Email</FormLabel>
@@ -141,17 +144,31 @@ const togglePasswordVisibility = () => {
 
         <div class="flex items-center justify-between">
           <div>
-            <Checkbox id="remember" class="mr-2" name="remember" />
+            <FormField name="remember" v-slot="{ componentField }">
+              <Checkbox id="remember" class="mr-2" v-bind="componentField" />
+            </FormField>
             <label for="remember" class="text-sm">Remember me</label>
           </div>
-          <a href="#" class="text-sm text-primary hover:underline">
+
+          <NuxtLink
+            to="/forgot-password"
+            class="text-sm text-primary hover:underline"
+          >
             Forgot password?
-          </a>
+          </NuxtLink>
         </div>
 
         <Button type="submit" class="w-full" :disabled="isSubmitting">
           {{ isSubmitting ? "Signing In..." : "Sign In" }}
         </Button>
+        <center>
+          <p>Or</p>
+        </center>
+        <NuxtLink to="/signup">
+          <Button class="w-full" variant="outline" :disabled="isSubmitting">
+            Create an account
+          </Button>
+        </NuxtLink>
       </form>
     </div>
   </div>

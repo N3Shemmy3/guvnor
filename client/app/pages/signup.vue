@@ -6,6 +6,7 @@ definePageMeta({
   layout: false,
 });
 
+const config = useRuntimeConfig();
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
 const passwordValue = ref("");
@@ -34,7 +35,8 @@ const validationSchema = {
       return "Invalid Password";
     return true;
   },
-  confirmPassword: (value, { password }) => {
+  confirmPassword: (value, values) => {
+    const password = values?.password ?? passwordValue.value;
     if (!value) return "Confirm password is required";
     if (value !== password) return "Passwords do not match";
     return true;
@@ -47,7 +49,7 @@ const { handleSubmit, isSubmitting, setErrors } = useForm({
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await $fetch("/api/auth/signup.php", {
+    const response = await $fetch(config.public.api + "index.php", {
       method: "POST",
       body: {
         email: values.email,
@@ -56,13 +58,10 @@ const onSubmit = handleSubmit(async (values) => {
       },
     });
 
-    // Assuming the API returns { success: true, message: '...', token: '...' } on success
     if (response.success) {
-      // Handle successful sign-up, e.g., redirect to sign-in or dashboard
       await navigateTo("/signin");
       console.log("Sign-up successful:", response);
     } else {
-      // Handle error, set form errors
       setErrors({ email: response.message || "Sign-up failed" });
     }
   } catch (error) {
@@ -89,9 +88,9 @@ const toggleConfirmPasswordVisibility = () => {
         class="w-full h-full object-cover"
       />
     </div>
-    <div class="w-full flex flex-col items-center px-6 md:px-8 lg:px-12 py-20">
-      <img src="/svg/logo.svg" width="150" height="150" />
-      <h1 class="text-start text-3xl font-bold mb-4">Sign Up</h1>
+    <div class="w-full flex flex-col px-6 md:px-8 lg:px-12 py-20">
+      <img src="/svg/logo.svg" width="150" height="150" class="mb-4" />
+      <h1 class="text-start text-3xl font-bold mb-4">Create an Account</h1>
 
       <form class="w-full space-y-4" @submit="onSubmit">
         <FormField name="email" v-slot="{ componentField }">

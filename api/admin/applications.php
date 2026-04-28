@@ -1,7 +1,33 @@
 <?php
+require_once __DIR__ . '/../include/config.php';
+require_once __DIR__ . '/admin-check.php';
 require_once __DIR__ . '/../notifications.php';
 
-function listApplications()
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+switch ($action) {
+    case 'list-applications':
+        listApplications();
+        break;
+
+    case 'get-application':
+        getApplication();
+        break;
+
+    case 'application-history':
+        getApplicationHistory();
+        break;
+
+    case 'update-status':
+        updateStatus($method);
+        break;
+
+    default:
+        respond(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+
+function listApplications(): void
 {
     $pdo = getDbConnection();
     $stmt = $pdo->query('
@@ -11,13 +37,15 @@ function listApplications()
         JOIN services s ON a.service_id = s.id
         ORDER BY a.submitted_at DESC
     ');
-    respond(['applications' => $stmt->fetchAll()]);
+    respond(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 
-function getApplication()
+function getApplication(): void
 {
-    $applicationId = intval($_GET['application_id'] ?? 0);
-    if ($applicationId <= 0) respond(['error' => 'application_id required'], 422);
+    $applicationId = (int)($_GET['application_id'] ?? 0);
+    if ($applicationId <= 0) {
+        respond(['success' => false, 'message' => 'application_id required'], 422);
+    }
 
     $pdo = getDbConnection();
     $stmt = $pdo->prepare('
@@ -29,35 +57,44 @@ function getApplication()
         WHERE a.id = ?
     ');
     $stmt->execute([$applicationId]);
-    $application = $stmt->fetch();
-    if (!$application) respond(['error' => 'Application not found'], 404);
+    $application = $stmt->fetch(PDO::FETCH_ASSOC);
+    if (!$application) {
+        respond(['success' => false, 'message' => 'Application not found'], 404);
+    }
 
     respond([
-        'application' => $application,
-        'history' => getApplicationHistoryRecords($applicationId),
+        'success' => true,
+        'data' => [
+            'application' => $application,
+            'history' => getApplicationHistoryRecords($applicationId),
+        ]
     ]);
 }
 
-function getApplicationHistory()
+function getApplicationHistory(): void
 {
-    $applicationId = intval($_GET['application_id'] ?? 0);
-    if ($applicationId <= 0) respond(['error' => 'application_id required'], 422);
+    $applicationId = (int)($_GET['application_id'] ?? 0);
+    if ($applicationId <= 0) {
+        respond(['success' => false, 'message' => 'application_id required'], 422);
+    }
 
-    respond(['history' => getApplicationHistoryRecords($applicationId)]);
+    respond(['success' => true, 'data' => getApplicationHistoryRecords($applicationId)]);
 }
 
-function updateStatus($method)
+function updateStatus(string $method): void
 {
-    if ($method !== 'POST') respond(['error' => 'POST required'], 405);
+    if ($method !== 'POST') {
+        respond(['success' => false, 'message' => 'POST required'], 405);
+    }
 
     $data = getJson();
     if (empty($data['application_id']) || empty($data['status'])) {
-        respond(['error' => 'application_id and status required'], 422);
+        respond(['success' => false, 'message' => 'application_id and status required'], 422);
     }
 
     $allowed = ['pending', 'approved', 'rejected'];
     if (!in_array($data['status'], $allowed, true)) {
-        respond(['error' => 'Invalid status'], 422);
+        respond(['success' => false, 'message' => 'Invalid status'], 422);
     }
 
     $pdo = getDbConnection();
@@ -68,14 +105,14 @@ function updateStatus($method)
 
     $stmt = $pdo->prepare('SELECT user_id, reference_no FROM applications WHERE id = ?');
     $stmt->execute([$data['application_id']]);
-    $application = $stmt->fetch();
+    $application = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($application) {
         if ($data['status'] === 'approved') {
             createApprovalDocument($data['application_id']);
         }
 
-        $message = 'Your application ' . $application['reference_no'] . ' is now ' . $data['status'] . '.';
+        $message = "Your application {$application['reference_no']} is now {$data['status']}.";
         if ($data['status'] === 'approved') {
             $message .= ' Your approved document is available for download.';
         }
@@ -88,10 +125,10 @@ function updateStatus($method)
         );
     }
 
-    respond(['message' => 'Application status updated']);
+    respond(['success' => true, 'message' => 'Application status updated']);
 }
 
-function createApprovalDocument($applicationId)
+function createApprovalDocument(int $applicationId): ?string
 {
     $pdo = getDbConnection();
     $stmt = $pdo->prepare('
@@ -103,15 +140,13 @@ function createApprovalDocument($applicationId)
         WHERE a.id = ?
     ');
     $stmt->execute([$applicationId]);
-    $application = $stmt->fetch();
+    $application = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$application) {
         return null;
     }
 
     $uploadDir = __DIR__ . '/../approved_documents';
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
+    @mkdir($uploadDir, 0755, true);
 
     $fileName = sprintf(
         'approved-%d-%s.html',
@@ -120,7 +155,11 @@ function createApprovalDocument($applicationId)
     );
     $filePath = $uploadDir . '/' . $fileName;
 
-    $html = '<!doctype html>
+    $details = nl2br(htmlspecialchars($application['details'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+    $approvedAt = date('Y-m-d H:i:s');
+
+    $html = <<<HTML
+<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
@@ -137,20 +176,21 @@ h1 { margin-bottom: 0; }
 <body>
 <div class="container">
   <div class="header">
-    <h1>Approved ' . htmlspecialchars($application['service_name']) . '</h1>
-    <p>Reference: ' . htmlspecialchars($application['reference_no']) . '</p>
-    <p>Approved on: ' . date('Y-m-d H:i:s') . '</p>
+    <h1>Approved {$application['service_name']}</h1>
+    <p>Reference: {$application['reference_no']}</p>
+    <p>Approved on: {$approvedAt}</p>
   </div>
-  <div class="row"><span class="label">Applicant:</span> ' . htmlspecialchars($application['user_name']) . '</div>
-  <div class="row"><span class="label">Email:</span> ' . htmlspecialchars($application['user_email']) . '</div>
-  <div class="row"><span class="label">Phone:</span> ' . htmlspecialchars($application['user_phone']) . '</div>
-  <div class="row"><span class="label">Service:</span> ' . htmlspecialchars($application['service_name']) . '</div>
-  <div class="row"><span class="label">Type:</span> ' . htmlspecialchars($application['service_type']) . '</div>
-  <div class="row"><span class="label">Details:</span> ' . nl2br(htmlspecialchars($application['details'])) . '</div>
+  <div class="row"><span class="label">Applicant:</span> {$application['user_name']}</div>
+  <div class="row"><span class="label">Email:</span> {$application['user_email']}</div>
+  <div class="row"><span class="label">Phone:</span> {$application['user_phone']}</div>
+  <div class="row"><span class="label">Service:</span> {$application['service_name']}</div>
+  <div class="row"><span class="label">Type:</span> {$application['service_type']}</div>
+  <div class="row"><span class="label">Details:</span> {$details}</div>
   <div class="row"><span class="label">Status:</span> Approved</div>
 </div>
 </body>
-</html>';
+</html>
+HTML;
 
     file_put_contents($filePath, $html);
 

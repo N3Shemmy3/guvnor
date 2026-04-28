@@ -1,9 +1,9 @@
 <?php
-header('Content-Type: application/json');
 require_once __DIR__ . '/include/config.php';
 
+
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_GET['action'] ?? '';
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 function respond($data, $code = 200)
 {
@@ -18,30 +18,7 @@ function getJson()
 }
 
 switch ($action) {
-    case 'signup':
-        require_once __DIR__ . '/auth/signup.php';
-        signupUser($method);
-        break;
 
-    case 'signin':
-        require_once __DIR__ . '/auth/signin.php';
-        signinUser($method);
-        break;
-
-    case 'signout':
-        require_once __DIR__ . '/auth/signout.php';
-        signoutUser();
-        break;
-
-    case 'request-password-reset':
-        require_once __DIR__ . '/auth/request-password-reset.php';
-        requestPasswordReset($method);
-        break;
-
-    case 'reset-password':
-        require_once __DIR__ . '/auth/reset-password.php';
-        resetPassword($method);
-        break;
 
     case 'save-profile':
         require_once __DIR__ . '/users.php';
@@ -83,22 +60,7 @@ switch ($action) {
         getApplicationHistoryEndpoint();
         break;
 
-    case 'list-services':
-    case 'get-service':
-        require_once __DIR__ . '/services.php';
-        if ($action === 'list-services') listServices();
-        if ($action === 'get-service') getService();
-        break;
 
-    case 'user-notifications':
-        require_once __DIR__ . '/notifications.php';
-        getUserNotifications();
-        break;
-
-    case 'mark-notification-read':
-        require_once __DIR__ . '/notifications.php';
-        markNotificationRead($method);
-        break;
 
     default:
         respond(['error' => 'Unknown action'], 404);

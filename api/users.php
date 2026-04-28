@@ -1,14 +1,53 @@
 <?php
+require_once __DIR__ . '/include/config.php';
+
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+switch ($action) {
+    case 'save-profile':
+        saveUserProfile($method);
+        break;
+    case 'get-profile':
+        getUserProfile();
+        break;
+    case 'upload-document':
+        uploadUserDocument($method);
+        break;
+    case 'list-documents':
+        listUserDocuments();
+        break;
+    default:
+        respond(['success' => false, 'message' => 'Method not allowed'], 405);
+}
+
+function respond(array $payload, int $status = 200)
+{
+    http_response_code($status);
+    if (!array_key_exists('success', $payload)) {
+        $payload['success'] = $status >= 200 && $status < 300;
+    }
+    echo json_encode($payload);
+    exit;
+}
+
+function getJson()
+{
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+    return is_array($data) ? $data : [];
+}
+
 function saveUserProfile($method)
 {
-    if ($method !== 'POST') respond(['error' => 'POST required'], 405);
+    if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
     session_start();
-    if (empty($_SESSION['user_id'])) respond(['error' => 'Authentication required'], 401);
+    if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     $data = getJson();
     if (empty($data['full_name']) || empty($data['nrc'])) {
-        respond(['error' => 'full_name and nrc are required'], 422);
+        respond(['success' => false, 'message' => 'full_name and nrc are required'], 422);
     }
 
     $pdo = getDbConnection();
@@ -16,7 +55,7 @@ function saveUserProfile($method)
         $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
         $stmt->execute([$data['email'], $_SESSION['user_id']]);
         if ($stmt->fetch()) {
-            respond(['error' => 'Email already in use'], 409);
+            respond(['success' => false, 'message' => 'Email already in use'], 409);
         }
     }
 
@@ -61,13 +100,13 @@ function saveUserProfile($method)
         ]);
     }
 
-    respond(['message' => 'Profile saved']);
+    respond(['success' => true, 'message' => 'Profile saved']);
 }
 
 function getUserProfile()
 {
     session_start();
-    if (empty($_SESSION['user_id'])) respond(['error' => 'Authentication required'], 401);
+    if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     $pdo = getDbConnection();
     $stmt = $pdo->prepare('
@@ -80,19 +119,19 @@ function getUserProfile()
     $stmt->execute([$_SESSION['user_id']]);
     $profile = $stmt->fetch();
 
-    if (!$profile) respond(['error' => 'Profile not found'], 404);
-    respond(['profile' => $profile]);
+    if (!$profile) respond(['success' => false, 'message' => 'Profile not found'], 404);
+    respond(['success' => true, 'message' => 'Profile found', 'data' => $profile]);
 }
 
 function uploadUserDocument($method)
 {
-    if ($method !== 'POST') respond(['error' => 'POST required'], 405);
+    if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
     session_start();
-    if (empty($_SESSION['user_id'])) respond(['error' => 'Authentication required'], 401);
+    if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     if (empty($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
-        respond(['error' => 'Document upload failed'], 400);
+        respond(['success' => false, 'message' => 'Document upload failed'], 400);
     }
 
     $documentType = $_POST['document_type'] ?? 'general';
@@ -107,7 +146,7 @@ function uploadUserDocument($method)
     $destination = $uploadDir . '/' . $fileName;
 
     if (!move_uploaded_file($_FILES['document']['tmp_name'], $destination)) {
-        respond(['error' => 'Unable to move uploaded file'], 500);
+        respond(['success' => false, 'message' => 'Unable to move uploaded file'], 500);
     }
 
     $pdo = getDbConnection();
@@ -123,13 +162,17 @@ function uploadUserDocument($method)
         'uploads/documents/' . $fileName
     ]);
 
-    respond(['message' => 'Document uploaded', 'file_path' => 'uploads/documents/' . $fileName], 201);
+    respond([
+        'success' => true,
+        'message' => 'Document uploaded',
+        'data' => ['file_path' => 'uploads/documents/' . $fileName]
+    ], 201);
 }
 
 function listUserDocuments()
 {
     session_start();
-    if (empty($_SESSION['user_id'])) respond(['error' => 'Authentication required'], 401);
+    if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     $pdo = getDbConnection();
     $stmt = $pdo->prepare('
@@ -139,5 +182,7 @@ function listUserDocuments()
         ORDER BY uploaded_at DESC
     ');
     $stmt->execute([$_SESSION['user_id']]);
-    respond(['documents' => $stmt->fetchAll()]);
+    $documents = $stmt->fetchAll();
+
+    respond(['success' => true, 'message' => 'Documents retrieved', 'data' => $documents]);
 }

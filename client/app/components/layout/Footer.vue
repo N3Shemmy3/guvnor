@@ -17,7 +17,7 @@ const contactInfo = [
 </script>
 <template>
   <footer
-    class="w-full h-fit border-t border-background/10 px-6 py-4 flex-1 justify-between md:px-8 md:py-6 lg:px-12 lg:py-8 bg-foreground text-background"
+    class="w-full h-fit border-t dark:border-background/10 px-6 py-4 flex-1 justify-between md:px-8 md:py-6 lg:px-12 lg:py-8 bg-foreground text-background"
   >
     <div class="w-full md:h-20 lg:h-24 *:select-text" />
     <div class="grid md:grid-cols-4 lg:grid-cols-7 gap-8">
