@@ -1,6 +1,16 @@
 <?php
+
 header('Content-Type: application/json');
-header("Access-Control-Allow-Origin: localhost:3000");
+$http_origin = $_SERVER['HTTP_ORIGIN'];
+
+if (
+    $http_origin == "http://localhost:3000"
+    || $http_origin == "https://n3shemmy.icuprojects.icu"
+    || $http_origin == "https://www.n3shemmy.icuprojects.icu"
+) {
+    header("Access-Control-Allow-Origin: $http_origin");
+}
+
 header("Access-Control-Allow-Methods: GET, DELETE, POST, PUT, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Credentials: true");
