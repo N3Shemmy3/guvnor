@@ -1,9 +1,17 @@
 <?php
 require_once __DIR__ . '/include/config.php';
-
+require_once __DIR__ . '/notifications.php';
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
+$action = $_GET['action'] ?? '';
 
+if (empty($action)) {
+    $action = $_POST['action'] ?? '';
+}
+
+if (empty($action)) {
+    $rawInput = json_decode(file_get_contents('php://input'), true);
+    $action = $rawInput['action'] ?? '';
+}
 switch ($action) {
     case 'submit-application':
         submitApplication($method);
@@ -73,11 +81,11 @@ function getMyApplications()
 
     respond([
         'success' => true,
-        'applications' => $applications,
-        'accepted_count' => $accepted,
-        'rejected_count' => $rejected,
-        'pending_count' => $pending,
-        'total_count' => count($applications),
+        'data' => $applications,
+        'accepted' => $accepted,
+        'rejected' => $rejected,
+        'pending' => $pending,
+        'total' => count($applications),
     ]);
 }
 
@@ -94,7 +102,7 @@ function getApplicationHistoryEndpoint()
         respond(['success' => false, 'message' => 'Application not found'], 404);
     }
 
-    respond(['success' => true, 'history' => getApplicationHistoryRecords($applicationId)]);
+    respond(['success' => true, 'data' => getApplicationHistoryRecords($applicationId)]);
 }
 
 function downloadApprovedDocument($method)

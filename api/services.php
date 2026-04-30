@@ -19,7 +19,7 @@ function listServices()
 {
     $pdo = getDbConnection();
     $stmt = $pdo->query('SELECT id, service_code, name, description, type, created_at FROM services ORDER BY name ASC');
-    respond(['success' => true, 'services' => $stmt->fetchAll()]);
+    respond(['success' => true, 'data' => $stmt->fetchAll()]);
 }
 
 function getService()

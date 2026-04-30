@@ -2,47 +2,46 @@
 require_once __DIR__ . '/include/config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
+$action = $_GET['action'] ?? '';
+
+if (empty($action) && $method === 'POST') {
+    $data = getJson(); // Using your helper function
+    $action = $data['action'] ?? '';
+}
+if (empty($action)) {
+    $action = $_POST['action'] ?? '';
+}
 
 switch ($action) {
-    case 'save-profile':
-        saveUserProfile($method);
-        break;
-    case 'get-profile':
-        getUserProfile();
-        break;
-    case 'upload-document':
-        uploadUserDocument($method);
-        break;
     case 'list-documents':
         listUserDocuments();
         break;
+
+    case 'upload-document':
+        uploadUserDocument($method);
+        break;
+
+    case 'delete-document':
+        deleteUserDocument($method);
+        break;
+
+    case 'save-profile':
+        saveUserProfile($method);
+        break;
+
+    case 'get-profile':
+        getUserProfile();
+        break;
+
     default:
-        respond(['success' => false, 'message' => 'Method not allowed'], 405);
-}
-
-function respond(array $payload, int $status = 200)
-{
-    http_response_code($status);
-    if (!array_key_exists('success', $payload)) {
-        $payload['success'] = $status >= 200 && $status < 300;
-    }
-    echo json_encode($payload);
-    exit;
-}
-
-function getJson()
-{
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
-    return is_array($data) ? $data : [];
+        respond(['success' => false, 'message' => "Action '$action' not recognized"], 405);
 }
 
 function saveUserProfile($method)
 {
     if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
-    session_start();
+
     if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     $data = getJson();
@@ -105,7 +104,6 @@ function saveUserProfile($method)
 
 function getUserProfile()
 {
-    session_start();
     if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     $pdo = getDbConnection();
@@ -127,7 +125,7 @@ function uploadUserDocument($method)
 {
     if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
-    session_start();
+
     if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     if (empty($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
@@ -171,7 +169,6 @@ function uploadUserDocument($method)
 
 function listUserDocuments()
 {
-    session_start();
     if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
 
     $pdo = getDbConnection();
@@ -185,4 +182,33 @@ function listUserDocuments()
     $documents = $stmt->fetchAll();
 
     respond(['success' => true, 'message' => 'Documents retrieved', 'data' => $documents]);
+}
+
+function deleteUserDocument($method)
+{
+    if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
+    if (empty($_SESSION['user_id'])) respond(['success' => false, 'message' => 'Authentication required'], 401);
+
+    $data = getJson();
+    if (empty($data['id'])) respond(['success' => false, 'message' => 'ID required'], 422);
+
+    $pdo = getDbConnection();
+
+    // First, get the file path to delete it from the server
+    $stmt = $pdo->prepare('SELECT file_path FROM user_documents WHERE id = ? AND user_id = ?');
+    $stmt->execute([$data['id'], $_SESSION['user_id']]);
+    $doc = $stmt->fetch();
+
+    if ($doc) {
+        $fullPath = __DIR__ . '/' . $doc['file_path'];
+        if (file_exists($fullPath)) {
+            unlink($fullPath); // Delete actual file
+        }
+
+        $stmt = $pdo->prepare('DELETE FROM user_documents WHERE id = ? AND user_id = ?');
+        $stmt->execute([$data['id'], $_SESSION['user_id']]);
+        respond(['success' => true, 'message' => 'Document deleted']);
+    } else {
+        respond(['success' => false, 'message' => 'Document not found'], 404);
+    }
 }

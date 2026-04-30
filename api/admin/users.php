@@ -29,7 +29,7 @@ function listUsers()
         LEFT JOIN user_profiles p ON p.user_id = u.id
         ORDER BY u.created_at DESC
     ');
-    respond(['success' => true, 'data' => $stmt->fetchAll()]);
+    respond(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 
 function getUser()
@@ -51,45 +51,61 @@ function getUser()
 
     respond(['success' => true, 'data' => $user]);
 }
-
 function updateUser($method)
 {
     if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
     $data = getJson();
-    if (empty($data['user_id'])) respond(['success' => false, 'message' => 'user_id required'], 422);
+    $userId = intval($data['user_id'] ?? 0);
+    if ($userId <= 0) respond(['success' => false, 'message' => 'user_id required'], 422);
 
-    $allowedRoles = ['user', 'admin'];
-    $allowedStatus = ['active', 'inactive'];
-
-    $role = $data['role'] ?? null;
-    $status = $data['status'] ?? null;
-
-    if ($role !== null && !in_array($role, $allowedRoles, true)) {
-        respond(['success' => false, 'message' => 'Invalid role'], 422);
-    }
-    if ($status !== null && !in_array($status, $allowedStatus, true)) {
-        respond(['success' => false, 'message' => 'Invalid status'], 422);
-    }
-
-    $fields = [];
-    $params = [];
-    if ($role !== null) {
-        $fields[] = 'role = ?';
-        $params[] = $role;
-    }
-    if ($status !== null) {
-        $fields[] = 'status = ?';
-        $params[] = $status;
-    }
-    if (empty($fields)) {
-        respond(['success' => false, 'message' => 'No update fields provided'], 422);
-    }
-
-    $params[] = $data['user_id'];
     $pdo = getDbConnection();
-    $stmt = $pdo->prepare('UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = ?');
-    $stmt->execute($params);
 
-    respond(['success' => true, 'message' => 'User updated']);
+    try {
+        $pdo->beginTransaction();
+
+        // 1. Update Core User Table
+        $stmtUser = $pdo->prepare('
+            UPDATE users SET 
+                name = ?, 
+                email = ?, 
+                phone = ?, 
+                role = ?, 
+                status = ? 
+            WHERE id = ?
+        ');
+        $stmtUser->execute([
+            $data['name'],
+            $data['email'],
+            $data['phone'] ?: null,
+            $data['role'],
+            $data['status'],
+            $userId
+        ]);
+
+        // 2. Update or Insert User Profile
+        // Using ON DUPLICATE KEY UPDATE ensures it works even if a profile doesn't exist yet
+        $stmtProfile = $pdo->prepare('
+            INSERT INTO user_profiles (user_id, nrc, address, gender, date_of_birth)
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                nrc = VALUES(nrc),
+                address = VALUES(address),
+                gender = VALUES(gender),
+                date_of_birth = VALUES(date_of_birth)
+        ');
+        $stmtProfile->execute([
+            $userId,
+            $data['nrc'] ?: '',
+            $data['address'] ?: null,
+            $data['gender'] ?: null,
+            $data['date_of_birth'] ?: null
+        ]);
+
+        $pdo->commit();
+        respond(['success' => true, 'message' => 'Profile and account updated']);
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        respond(['success' => false, 'message' => 'Database error: ' . $e->getMessage()], 500);
+    }
 }

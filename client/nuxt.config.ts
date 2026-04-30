@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2026-03-09",
   devtools: { enabled: true },
   runtimeConfig: { public: { api: "https://n3shemmy.icuprojects.icu/api" } },
-  css: ["./app/assets/css/main.css"],
+  css: ["@/assets/css/main.css"],
   modules: [
     "@nuxt/icon",
     "@nuxt/image",

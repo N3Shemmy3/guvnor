@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full md:pl-64 pt-14 overflow-y-hidden">
+  <div class="flex h-screen w-full bg-slate-50 overflow-hidden">
     <slot />
   </div>
 </template>

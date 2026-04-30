@@ -2,8 +2,12 @@
 require_once __DIR__ . '/../include/config.php';
 require_once __DIR__ . '/admin-check.php';
 
+// Parse JSON input immediately to handle Axios POST requests
+$jsonData = getJson();
 $method = $_SERVER['REQUEST_METHOD'];
-$action = $_POST['action'] ?? $_GET['action'] ?? '';
+
+// Extract action from JSON, POST, or GET
+$action = $jsonData['action'] ?? $_POST['action'] ?? $_GET['action'] ?? '';
 
 switch ($action) {
     case 'list-services':
@@ -15,26 +19,26 @@ switch ($action) {
         break;
 
     case 'create-service':
-        createService($method);
+        createService($method, $jsonData);
         break;
 
     case 'update-service':
-        updateService($method);
+        updateService($method, $jsonData);
         break;
 
     case 'delete-service':
-        deleteService($method);
+        deleteService($method, $jsonData);
         break;
 
     default:
-        respond(['success' => false, 'message' => 'Invalid action'], 400);
+        respond(['success' => false, 'message' => 'Invalid action: ' . $action], 400);
 }
 
 function listServices()
 {
     $pdo = getDbConnection();
     $stmt = $pdo->query('SELECT id, service_code, name, description, type, created_at FROM services ORDER BY name ASC');
-    respond(['success' => true, 'data' => $stmt->fetchAll()]);
+    respond(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 
 function getService()
@@ -45,17 +49,16 @@ function getService()
     $pdo = getDbConnection();
     $stmt = $pdo->prepare('SELECT id, service_code, name, description, type, created_at FROM services WHERE id = ?');
     $stmt->execute([$serviceId]);
-    $service = $stmt->fetch();
+    $service = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$service) respond(['success' => false, 'message' => 'Service not found'], 404);
 
     respond(['success' => true, 'data' => $service]);
 }
 
-function createService($method)
+function createService($method, $data)
 {
     if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
-    $data = getJson();
     if (empty($data['service_code']) || empty($data['name']) || empty($data['type'])) {
         respond(['success' => false, 'message' => 'service_code, name, and type are required'], 422);
     }
@@ -77,11 +80,10 @@ function createService($method)
     respond(['success' => true, 'message' => 'Service created', 'service_id' => $pdo->lastInsertId()], 201);
 }
 
-function updateService($method)
+function updateService($method, $data)
 {
     if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
-    $data = getJson();
     if (empty($data['service_id'])) respond(['success' => false, 'message' => 'service_id required'], 422);
 
     $fields = [];
@@ -120,11 +122,10 @@ function updateService($method)
     respond(['success' => true, 'message' => 'Service updated']);
 }
 
-function deleteService($method)
+function deleteService($method, $data)
 {
     if ($method !== 'POST') respond(['success' => false, 'message' => 'POST required'], 405);
 
-    $data = getJson();
     if (empty($data['service_id'])) respond(['success' => false, 'message' => 'service_id required'], 422);
 
     $pdo = getDbConnection();

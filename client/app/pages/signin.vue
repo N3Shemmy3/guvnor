@@ -1,74 +1,60 @@
 <script setup>
-import axios from "axios";
 import { ref, watch } from "vue";
-import { useForm } from "vee-validate";
+import { useForm, useField } from "vee-validate";
 
-definePageMeta({
-  layout: false,
-});
+definePageMeta({ layout: false });
+
 const config = useRuntimeConfig();
 const showPassword = ref(false);
-const passwordValue = ref("");
+
+const validationSchema = {
+  email: (val) =>
+    val
+      ? /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) || "Invalid email"
+      : "Required",
+  password: (val) => (val && val.length >= 8 ? true : "Invalid Password"),
+  remember: () => true,
+};
+
+const { handleSubmit, setErrors } = useForm({ validationSchema });
+const { value: passwordValue } = useField("password");
+
 const isMinLength = ref(false);
 const hasUppercase = ref(false);
 const hasNumber = ref(false);
 
-// Watch the password value and update live validation checks
 watch(passwordValue, (newVal) => {
-  isMinLength.value = newVal.length >= 8;
-  hasUppercase.value = /[A-Z]/.test(newVal);
-  hasNumber.value = /[0-9]/.test(newVal);
-});
-
-const validationSchema = {
-  email: (value) => {
-    if (!value) return "Email is required";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-      return "Please enter a valid email address";
-    return true;
-  },
-  password: (value) => {
-    if (!value) return "Password is required";
-    if (value.length < 8 || !/[A-Z]/.test(value) || !/[0-9]/.test(value))
-      return "Invalid Password";
-    return true;
-  },
-  remember: () => true,
-};
-
-const { handleSubmit, isSubmitting, setErrors } = useForm({
-  validationSchema,
+  const val = newVal || "";
+  isMinLength.value = val.length >= 8;
+  hasUppercase.value = /[A-Z]/.test(val);
+  hasNumber.value = /[0-9]/.test(val);
 });
 
 const onSubmit = handleSubmit(async (values) => {
   try {
-    const response = await axios.post(`${config.public.api}/auth/signin.php`, {
-      email: values.email,
-      password: values.password,
-      remember: values.remember,
+    const data = await $fetch(`${config.public.api}/auth/signin.php`, {
+      method: "POST",
+      body: values,
+      credentials: "include",
     });
 
-    const result = response.data;
+    if (data.success) {
+      const token = useCookie("auth_token", {
+        maxAge: values.remember ? 60 * 60 * 24 * 30 : undefined,
+        sameSite: "lax",
+      });
+      token.value = data.token;
 
-    if (result.success) {
-      console.log("Sign-in successful:", result);
-      await navigateTo("/dashboard");
+      await navigateTo("/user/applications");
     } else {
-      setErrors({ email: result.message || "Sign-in failed" });
+      setErrors({ email: data.message || "Sign-in failed" });
     }
-  } catch (error) {
-    const errorMessage =
-      error.response?.data?.message || "An error occurred during sign-in";
-    console.error("Sign-in error:", error);
+  } catch (err) {
+    const errorMessage = err.data?.message || "An error occurred";
     setErrors({ email: errorMessage });
   }
 });
-
-const togglePasswordVisibility = () => {
-  showPassword.value = !showPassword.value;
-};
 </script>
-
 <template>
   <div class="h-dvh w-dvw grid md:grid-cols-2">
     <div>
